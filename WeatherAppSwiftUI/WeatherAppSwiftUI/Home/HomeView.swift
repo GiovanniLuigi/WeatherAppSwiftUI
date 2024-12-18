@@ -21,7 +21,7 @@ struct HomeView: View {
                 text: $viewModel.searchText,
                 prompt: Text("Search Location")
                     .fontPoppins(.regular, size: 15)
-                    .foregroundStyle(.customLightGray)
+                    .foregroundStyle(.textTertiary)
             )
                 .textFieldStyle(RoundedWithIconTextFieldStyle())
                 .padding(.top, 24)
@@ -86,12 +86,15 @@ struct RoundedWithIconTextFieldStyle: TextFieldStyle {
         .padding(.vertical, 12)
         .padding(.horizontal, 20)
         .background(
-            Color(UIColor.cardBackground)
+            Color(.cardBackground)
         )
         .clipShape(.rect(cornerRadius: 16))
         .focused($focused)
         .onTapGesture {
             focused = true
         }
+        .tint(.textPrimary)
+        .foregroundStyle(.textPrimary)
+        .fontPoppins(.regular, size: 15)
     }
 }
