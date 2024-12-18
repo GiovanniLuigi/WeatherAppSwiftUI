@@ -60,12 +60,16 @@ struct NoCitySelectedView: View {
             Spacer()
             
             Text("No City Selected")
+                .fontPoppins(.semiBold, size: 30)
+            
             Text("Please earch For A City")
+                .fontPoppins(.semiBold, size: 15)
             
             Spacer()
             Spacer()
             Spacer()
         }
+        .foregroundStyle(.textPrimary)
     }
 }
 
