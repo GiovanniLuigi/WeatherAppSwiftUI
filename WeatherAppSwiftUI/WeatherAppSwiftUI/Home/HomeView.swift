@@ -16,7 +16,13 @@ struct HomeView: View {
     
     var body: some View {
         VStack {
-            TextField("Search Location", text: $viewModel.searchText)
+            TextField(
+                "",
+                text: $viewModel.searchText,
+                prompt: Text("Search Location")
+                    .fontPoppins(.regular, size: 15)
+                    .foregroundStyle(.customLightGray)
+            )
                 .textFieldStyle(RoundedWithIconTextFieldStyle())
                 .padding(.top, 24)
                 .padding(.horizontal, 24)
@@ -65,6 +71,7 @@ struct NoCitySelectedView: View {
 
 struct RoundedWithIconTextFieldStyle: TextFieldStyle {
     // Tapping on the background color also triggers the keyboard
+    // TODO: - tap outside to dismiss
     @FocusState private var focused: Bool
     
     func _body(configuration: TextField<Self._Label>) -> some View {
