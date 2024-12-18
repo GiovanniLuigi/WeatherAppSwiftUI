@@ -11,7 +11,14 @@ import SwiftUI
 struct WeatherAppSwiftUIApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HomeView(
+                viewModel: HomeViewModel(
+                    cityService: CityService(
+                        httpClient: HTTPClient(),
+                        storageClient: UserDefaultsStorageClient()
+                    )
+                )
+            )
         }
     }
 }
