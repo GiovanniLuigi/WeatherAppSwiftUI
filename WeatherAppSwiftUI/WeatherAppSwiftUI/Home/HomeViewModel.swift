@@ -12,9 +12,26 @@ protocol HomeViewModelProtocol {
     
 }
 
+enum HomeViewState {
+    case isLoadingCachedCity
+    case loadedCachedCity
+    case isSearching
+    case noSearchResults
+    case error
+}
+
+struct CityWeather {
+    let city: City
+    let weather: Weather
+}
+
+@MainActor
 final class HomeViewModel: ObservableObject, HomeViewModelProtocol {
     @Published var searchText: String = ""
-    @Published private(set) var selectedCity: City?
+    @Published private(set) var selectedCity: CityWeather?
+    @Published private(set) var searchResults: [CityWeather] = []
+    
+    @Published private(set) var viewState: HomeViewState = .isLoadingCachedCity
     
     private var cancellables: Set<AnyCancellable> = []
     private let cityService: CityServiceProtocol
@@ -30,6 +47,10 @@ final class HomeViewModel: ObservableObject, HomeViewModelProtocol {
                 self?.performSearch(with: query)
             }
             .store(in: &cancellables)
+    }
+    
+    func loadCachedCity() async {
+        viewState = .loadedCachedCity
     }
     
     private func performSearch(with query: String) {
