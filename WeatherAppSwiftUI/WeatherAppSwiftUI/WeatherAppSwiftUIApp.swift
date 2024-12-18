@@ -16,6 +16,9 @@ struct WeatherAppSwiftUIApp: App {
                     cityService: CityService(
                         httpClient: HTTPClient(),
                         storageClient: UserDefaultsStorageClient()
+                    ),
+                    weatherService: WeatherService(
+                        httpClient: HTTPClient()
                     )
                 )
             )

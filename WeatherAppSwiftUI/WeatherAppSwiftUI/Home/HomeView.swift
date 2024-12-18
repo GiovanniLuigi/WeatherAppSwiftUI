@@ -32,14 +32,22 @@ struct HomeView: View {
                     Text("To implement first load")
                 case .loadedCachedCity:
                     if let city = viewModel.selectedCity {
-                        Text("Fetch current weather")
+                        Text("Found: \(city.city.name)")
                     } else {
                         NoCitySelectedView()
                     }
                 case .isSearching:
                     Text("Searching")
                 case .noSearchResults:
-                    Text("Nothing found")
+                    EmptyView()
+                case .loadedSearchResults:
+                    ScrollView {
+                        LazyVStack {
+                            ForEach(viewModel.searchResults) { cityWeather in
+                                Text(cityWeather.city.name)
+                            }
+                        }
+                    }
                 case .error:
                     Text("Error")
                 }
