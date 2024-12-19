@@ -23,7 +23,7 @@ struct HTTPClient: HTTPClientProtocol {
             throw ServiceError.network
         }
         
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: url, timeoutInterval: 30)
         request.httpMethod = endpoint.method
         
         let (data, response) = try await URLSession.shared.data(for: request)

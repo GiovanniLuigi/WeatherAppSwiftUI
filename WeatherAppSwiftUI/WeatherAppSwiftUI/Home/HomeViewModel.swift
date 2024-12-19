@@ -18,7 +18,7 @@ enum HomeViewState {
     case isSearching
     case noSearchResults
     case loadedSearchResults
-    case error
+    case error(message: String, retry: () -> Void)
 }
 
 struct CityWeather: Identifiable {
@@ -51,11 +51,7 @@ final class HomeViewModel: ObservableObject, HomeViewModelProtocol {
                 if query.isEmpty {
                     self?.cleanSearch()
                 } else {
-                    self?.searchTask?.cancel()
-                    self?.searchTask = nil
-                    self?.searchTask = Task {
-                        await self?.performSearch(with: query)
-                    }
+                    self?.performSearch(with: query)
                 }
             }
             .store(in: &cancellables)
@@ -88,7 +84,9 @@ final class HomeViewModel: ObservableObject, HomeViewModelProtocol {
                 self?.selectedCity = cityWeather
                 self?.viewState = .loadedCachedCity
             } catch {
-                // TODO:- handle error
+                self?.viewState = .error(message: "We're sorry, it was not possible to select this city. You can retry it later", retry: { [weak self] in
+                    self?.select(cityWeather)
+                })
             }
         }
     }
@@ -98,22 +96,28 @@ final class HomeViewModel: ObservableObject, HomeViewModelProtocol {
         viewState = .loadedCachedCity
     }
     
-    private func performSearch(with query: String) async {
-        do {
-            self.viewState = .isSearching
-            let cities = try await cityService.searchCity(query: query)
-            guard !cities.isEmpty else {
-                viewState = .noSearchResults
-                return
+    private func performSearch(with query: String) {
+        self.searchTask?.cancel()
+        self.searchTask = nil
+        self.searchTask = Task {
+            do {
+                self.viewState = .isSearching
+                let cities = try await cityService.searchCity(query: query)
+                guard !cities.isEmpty else {
+                    viewState = .noSearchResults
+                    return
+                }
+                let weathersByCityId = try await getCurrentWeather(for: cities)
+                self.searchResults = cities.compactMap({ city in
+                    guard let weather = weathersByCityId[city.id] else { return nil }
+                    return CityWeather(city: city, weather: weather)
+                })
+                self.viewState = .loadedSearchResults
+            } catch {
+                self.viewState = .error(message: "We're sorry, it was not possible to search this location. You can retry it later", retry: { [weak self] in
+                    self?.performSearch(with: query)
+                })
             }
-            let weathersByCityId = try await getCurrentWeather(for: cities)
-            self.searchResults = cities.compactMap({ city in
-                guard let weather = weathersByCityId[city.id] else { return nil }
-                return CityWeather(city: city, weather: weather)
-            })
-            self.viewState = .loadedSearchResults
-        } catch {
-            //TODO: - handle search errors
         }
     }
     
