@@ -14,6 +14,14 @@ struct Weather: Decodable {
     let uvIndex: Double
     let feelsLikeTemperature: Double
     
+    init(temperature: Double, condition: WeatherCondition, humidity: Int, uvIndex: Double, feelsLikeTemperature: Double) {
+        self.temperature = temperature
+        self.condition = condition
+        self.humidity = humidity
+        self.uvIndex = uvIndex
+        self.feelsLikeTemperature = feelsLikeTemperature
+    }
+    
     enum CodingKeys: String, CodingKey {
         case temperature = "temp_c"
         case condition
@@ -21,7 +29,7 @@ struct Weather: Decodable {
         case uvIndex = "uv"
         case feelsLikeTemperature = "feelslike_c"
     }
-    
+
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.temperature = try container.decode(Double.self, forKey: .temperature)
@@ -36,6 +44,11 @@ struct WeatherCondition: Decodable {
     let text: String
     let iconURL: String
     
+    init(text: String, iconURL: String) {
+        self.text = text
+        self.iconURL = iconURL
+    }
+    
     enum CodingKeys: String, CodingKey {
         case text
         case iconURL = "icon"
@@ -44,6 +57,8 @@ struct WeatherCondition: Decodable {
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.text = try container.decode(String.self, forKey: .text)
-        self.iconURL = try container.decode(String.self, forKey: .iconURL)
+        // Assuming that the data is consistent from the backend, might need refactor if it's not
+        let iconURL = try container.decode(String.self, forKey: .iconURL)
+        self.iconURL = "https:" + iconURL
     }
 }

@@ -32,12 +32,12 @@ final class HomeViewModel: ObservableObject, HomeViewModelProtocol {
     @Published var searchText: String = ""
     @Published private(set) var selectedCity: CityWeather?
     @Published private(set) var searchResults: [CityWeather] = []
-    
     @Published private(set) var viewState: HomeViewState = .isLoadingCachedCity
     
     private var cancellables: Set<AnyCancellable> = []
     private let cityService: CityServiceProtocol
     private let weatherService: WeatherServiceProtocol
+    private var searchTask: Task<Void, Never>?
     
     init(cityService: CityServiceProtocol, weatherService: WeatherServiceProtocol) {
         self.cityService = cityService
@@ -51,8 +51,9 @@ final class HomeViewModel: ObservableObject, HomeViewModelProtocol {
                 if query.isEmpty {
                     self?.cleanSearch()
                 } else {
-                    // TODO: add cancellation
-                    Task {
+                    self?.searchTask?.cancel()
+                    self?.searchTask = nil
+                    self?.searchTask = Task {
                         await self?.performSearch(with: query)
                     }
                 }
@@ -60,8 +61,36 @@ final class HomeViewModel: ObservableObject, HomeViewModelProtocol {
             .store(in: &cancellables)
     }
     
+    deinit {
+        searchTask?.cancel()
+        searchTask = nil
+    }
+    
     func loadCachedCity() async {
+        guard let city = try? await cityService.loadCachedCity() else {
+            viewState = .loadedCachedCity
+            return
+        }
+        
+        guard let weather = try? await weatherService.getCurrentWeather(for: city) else {
+            viewState = .loadedCachedCity
+            return
+        }
+        
+        self.selectedCity = CityWeather(city: city, weather: weather)
         viewState = .loadedCachedCity
+    }
+    
+    func select(_ cityWeather: CityWeather) {
+        Task { [weak self] in
+            do {
+                try await self?.cityService.saveCity(cityWeather.city)
+                self?.selectedCity = cityWeather
+                self?.viewState = .loadedCachedCity
+            } catch {
+                // TODO:- handle error
+            }
+        }
     }
     
     private func cleanSearch() {
